@@ -1,0 +1,84 @@
+# Git Repository Manager MCP Server
+
+A Model Context Protocol (MCP) server that provides secure git operations across multiple repositories.
+
+## Purpose
+
+This MCP server provides a secure interface for AI assistants to interact with git repositories. It's designed for read-only operations and safe querying of repository information without allowing arbitrary command execution.
+
+## Features
+
+### Current Implementation
+
+- **`list_repos`** - List all git repositories in the configured base path
+- **`repo_status`** - Get the git status showing modified, staged, and untracked files
+- **`repo_log`** - View commit history with configurable limits
+- **`repo_branches`** - List all branches including remote branches
+- **`repo_diff`** - Show uncommitted changes for the repository or specific files
+- **`repo_remote`** - Display configured remote repository URLs
+- **`repo_current_branch`** - Get the currently checked out branch
+- **`repo_show_commit`** - View details of a specific commit
+- **`repo_file_history`** - Show commit history for a specific file
+- **`repo_search`** - Search for text across tracked files
+- **`repo_stats`** - Get repository statistics including commits and contributors
+
+## Prerequisites
+
+- Docker Desktop with MCP Toolkit enabled
+- Docker MCP CLI plugin (`docker mcp` command)
+- One or more git repositories to manage
+- Git installed in the Docker container (included in Dockerfile)
+
+## Installation
+
+See the step-by-step instructions provided with the files.
+
+## Usage Examples
+
+In Claude Desktop, you can ask:
+
+- "List all my git repositories"
+- "What's the status of my project-name repo?"
+- "Show me the last 20 commits in my-app"
+- "What branches exist in my-website?"
+- "Show me uncommitted changes in backend-api"
+- "What remotes are configured for frontend-app?"
+- "Search for 'TODO' in my-project"
+- "Show me the history of config.py in my-app"
+- "What's the current branch in project-x?"
+- "Show me commit abc123 from my-repo"
+- "Get statistics for my-project"
+
+## Architecture
+
+Claude Desktop → MCP Gateway → Git Repo Manager → Git Repositories
+↓                    ↓
+(Docker Container)   (/repos mounted volume)
+
+## Volume Mounting
+
+The server expects git repositories to be mounted at `/repos` inside the container. When configuring the catalog, you'll mount your local git repositories directory.
+
+## Security Features
+
+- **Path Validation**: All paths are sanitized and validated to prevent directory traversal
+- **Base Path Restriction**: All operations are restricted to the configured base path
+- **Command Sanitization**: Input is sanitized to prevent command injection
+- **Non-Root User**: Container runs as non-root user (mcpuser)
+- **Read-Only Focus**: Tools are designed primarily for reading repository state
+- **No Arbitrary Commands**: Only whitelisted git operations are allowed
+- **Output Limits**: Large outputs are truncated to prevent memory issues
+- **Timeout Protection**: Commands have timeouts to prevent hanging
+
+## Development
+
+### Local Testing
+```bash
+# Set environment variables for testing
+export GIT_REPOS_PATH="/path/to/your/repos"
+
+# Run directly
+python gitrepo_server.py
+
+# Test MCP protocol
+echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | python gitrepo_server.py
